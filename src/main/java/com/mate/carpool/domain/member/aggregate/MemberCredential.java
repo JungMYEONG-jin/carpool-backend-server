@@ -13,4 +13,12 @@ public class MemberCredential {
 
     @Column(name = "password")
     private String password;
+
+    public MemberCredential(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
+
+    protected MemberCredential() {
+    }
 }
