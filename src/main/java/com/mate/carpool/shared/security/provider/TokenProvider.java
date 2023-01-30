@@ -4,6 +4,7 @@ import com.mate.carpool.domain.member.dto.TokenDTO;
 import com.mate.carpool.shared.exception.CustomHttpException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SecurityException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Arrays;
 import java.util.Base64;
@@ -28,29 +31,66 @@ public class TokenProvider {
 
     private static final String AUTHORITIES_KEY = "auth";
     private static final String BEARER_TYPE = "Bearer";
+    public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final String BEARER_PREFIX = "Bearer ";
     private static final long TOKEN_EXPIRE_TIME = 1000 * 60 * 60 ; // 테스트 환경 1시간
     private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 30; // 1달
 
     private final Key key;
 
-    public TokenProvider(@Value("${jwt.secret}") String secretKey){
-        byte[] keyBytes = Base64.getDecoder().decode(secretKey);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+    public TokenProvider(@Value("${jwt.secret}") String secretKey) {
+        byte[] decode = Base64.getDecoder().decode(secretKey);
+        this.key = Keys.hmacShaKeyFor(decode);
     }
 
-    public TokenDTO generateToken(Authentication authentication){
+
+    public TokenDTO generateAccessToken(Authentication authentication, String refreshToken) {
         String authorities = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
         long now = (new Date()).getTime();
+        // expiration time
         Date exp = new Date(now + TOKEN_EXPIRE_TIME);
-        Date refreshExp = new Date(now + REFRESH_TOKEN_EXPIRE_TIME);
-        // create accessToken
-        String accessToken = Jwts.builder().setSubject(authentication.getName()) // get name is id
+        log.info("exp {}", exp.getTime());
+        Date refreshExp = parseClaims(refreshToken).getExpiration();
+        log.info("refreshExp {}", refreshExp.getTime());
+        // create access token
+        String accessToken = Jwts.builder().setSubject(authentication.getName())
                 .claim(AUTHORITIES_KEY, authorities)
                 .setExpiration(exp)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
-        String refreshToken = Jwts.builder().setExpiration(refreshExp).signWith(key, SignatureAlgorithm.HS512).compact();
+        return TokenDTO.builder()
+                .grantType(BEARER_TYPE)
+                .accessToken(accessToken)
+                .accessTokenExpiresIn(exp.getTime())
+                .refreshToken(refreshToken)
+                .refreshTokenExpiresIn(refreshExp.getTime())
+                .build();
+    }
 
+    /**
+     * 리프레쉬 토큰과, 액세스 토큰을 함께 발행한다.
+     * @param authentication
+     * @return
+     */
+    public TokenDTO generateToken(Authentication authentication) {
+        String authorities = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
+        long now = (new Date()).getTime();
+        // expiration time
+        Date exp = new Date(now + TOKEN_EXPIRE_TIME);
+        log.info("exp {}", exp.getTime());
+        Date refreshExp = new Date(now + REFRESH_TOKEN_EXPIRE_TIME);
+        log.info("refreshExp {}", refreshExp.getTime());
+        // create access token
+        String accessToken = Jwts.builder().setSubject(authentication.getName())
+                .claim(AUTHORITIES_KEY, authorities)
+                .setExpiration(exp)
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+        String refreshToken = Jwts.builder().setSubject(authentication.getName())
+                .claim(AUTHORITIES_KEY, authorities)
+                .setExpiration(refreshExp)
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
         return TokenDTO.builder()
                 .grantType(BEARER_TYPE)
                 .accessToken(accessToken)
@@ -60,13 +100,13 @@ public class TokenProvider {
                 .build();
     }
 
-    public Authentication getAuthentication(String accessToken){
+    public Authentication getAuthentication(String accessToken) {
         // decode
         Claims claims = parseClaims(accessToken);
 
         // no authority
         if (claims.get(AUTHORITIES_KEY)==null){
-            throw new CustomHttpException(HttpStatus.UNAUTHORIZED, "요청애 권한이 존재하지 않습니다.");
+            throw new CustomHttpException(HttpStatus.UNAUTHORIZED, "권한이 없습니다.");
         }
 
         List<SimpleGrantedAuthority> authorities = Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
@@ -78,23 +118,44 @@ public class TokenProvider {
         return new UsernamePasswordAuthenticationToken(principal,"",authorities);
     }
 
+    public Authentication getAuthenticationByRefreshToken(String refreshToken) {
+        // decode
+        Claims claims = parseClaims(refreshToken);
+
+        // no authority
+        if (claims.get(AUTHORITIES_KEY)==null){
+            throw new CustomHttpException(HttpStatus.UNAUTHORIZED, "권한이 없습니다.");
+        }
+
+        List<SimpleGrantedAuthority> authorities = Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+        UserDetails principal = new User(claims.getSubject(), "", authorities);
+        return new UsernamePasswordAuthenticationToken(principal,"",authorities);
+    }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            log.info("잘못된 JWT 서명입니다.");
+        } catch (SecurityException | MalformedJwtException e) {
+            log.info("Wrong JWT Signature");
         } catch (ExpiredJwtException e) {
-            log.info("만료된 JWT 토큰입니다.");
+            log.info("Expired Token");
         } catch (UnsupportedJwtException e) {
-            log.info("지원되지 않는 JWT 토큰입니다.");
+            log.info("Not Supported JWT Token");
         } catch (IllegalArgumentException e) {
-            log.info("JWT 토큰이 잘못되었습니다.");
+            log.info("The Token is invalid");
         }
         return false;
     }
 
-    public Long getExpiration(String accessToken){
+    /**
+     * 토큰 만료일 체크
+     * @param accessToken
+     * @return
+     */
+    public Long getExpiration(String accessToken) {
         Date expiration = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody().getExpiration();
         long now = new Date().getTime();
         return expiration.getTime() - now;
@@ -106,6 +167,15 @@ public class TokenProvider {
         } catch (ExpiredJwtException e) {
             return e.getClaims();
         }
+    }
+
+    public String parseBearerToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 
 }

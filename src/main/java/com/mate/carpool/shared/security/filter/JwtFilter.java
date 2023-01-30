@@ -35,7 +35,7 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
             // get token
-            String token = parseBearerToken(request);
+            String token = tokenProvider.parseBearerToken(request);
             log.info("JwtAuth Filter, Request URI : {}", request.getRequestURI());
 
             // 유효 검증
@@ -54,12 +54,4 @@ public class JwtFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private String parseBearerToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
-            return bearerToken.substring(7); // apple api 예로 "Bearer " + jwt 로 보냄
-        }
-        return null;
-    }
 }

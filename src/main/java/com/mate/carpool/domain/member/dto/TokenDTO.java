@@ -1,7 +1,10 @@
 package com.mate.carpool.domain.member.dto;
 
+import com.mate.carpool.web.auth.dto.TokenResponseDTO;
 import lombok.Builder;
+import lombok.Getter;
 
+@Getter
 public class TokenDTO {
     private String grantType;
     private String accessToken;
@@ -16,6 +19,16 @@ public class TokenDTO {
         this.refreshToken = refreshToken;
         this.accessTokenExpiresIn = accessTokenExpiresIn;
         this.refreshTokenExpiresIn = refreshTokenExpiresIn;
+    }
+
+    public TokenResponseDTO toResponse() {
+        return TokenResponseDTO.builder()
+                .grantType(grantType)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .accessTokenExpiresIn(accessTokenExpiresIn)
+                .refreshTokenExpiresIn(refreshTokenExpiresIn)
+                .build();
     }
 
 }
