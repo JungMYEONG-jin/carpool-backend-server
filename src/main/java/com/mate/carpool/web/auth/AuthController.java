@@ -4,6 +4,7 @@ import com.mate.carpool.domain.member.dto.LoginDTO;
 import com.mate.carpool.domain.member.dto.MemberCreateDTO;
 import com.mate.carpool.domain.member.service.MemberService;
 import com.mate.carpool.shared.dto.CommonResponse;
+import com.mate.carpool.shared.dto.ResponseData;
 import com.mate.carpool.web.auth.dto.LoginRequestDTO;
 import com.mate.carpool.web.auth.dto.MemberCreateRequestDTO;
 import com.mate.carpool.web.auth.dto.TokenResponseDTO;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.yaml.snakeyaml.events.Event;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -31,14 +33,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<CommonResponse> login(@Validated @RequestBody LoginRequestDTO dto) {
+    public ResponseEntity<ResponseData<TokenResponseDTO>> login(@Validated @RequestBody LoginRequestDTO dto) {
         TokenResponseDTO login = memberService.login(new LoginDTO(dto.getEmail(), dto.getPassword()));
-        return ResponseEntity.ok(new CommonResponse(HttpStatus.OK, login.toString()));
+        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "성공적으로 로그인을 하였습니다.", login));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<CommonResponse> logout(HttpServletRequest request) {
+    public ResponseEntity<ResponseData<String>> logout(HttpServletRequest request) {
         String id = memberService.logout(request);
-        return ResponseEntity.ok(new CommonResponse(HttpStatus.OK, "유저 " + id + " 로그아웃을 완료하였습니다."));
+        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "성공적으로 로그아웃 하였습니다.", id));
     }
 }
