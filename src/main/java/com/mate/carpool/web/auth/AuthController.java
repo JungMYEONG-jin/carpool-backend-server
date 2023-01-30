@@ -33,14 +33,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ResponseData<TokenResponseDTO>> login(@Validated @RequestBody LoginRequestDTO dto) {
+    public ResponseEntity<TokenResponseDTO> login(@Validated @RequestBody LoginRequestDTO dto) {
         TokenResponseDTO login = memberService.login(new LoginDTO(dto.getEmail(), dto.getPassword()));
-        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "성공적으로 로그인을 하였습니다.", login));
+        return ResponseEntity.ok(login);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ResponseData<String>> logout(HttpServletRequest request) {
-        String id = memberService.logout(request);
-        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "성공적으로 로그아웃 하였습니다.", id));
+    public ResponseEntity<CommonResponse> logout(HttpServletRequest request) {
+        memberService.logout(request);
+        return ResponseEntity.ok(new CommonResponse(HttpStatus.OK, "성공적으로 로그아웃을 하였습니다."));
     }
 }
