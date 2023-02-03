@@ -2,4 +2,4 @@ server:
   port: 8880
 spring:
   profiles:
-    active: test
+    active: dev

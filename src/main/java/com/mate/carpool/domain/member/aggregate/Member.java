@@ -37,4 +37,9 @@ public class Member extends BaseTimeEntity {
         this.profileImageUrl = profileImageUrl;
         this.type = type;
     }
+
+    // domain logic
+    public void changeType(MemberType type){
+        this.type = type;
+    }
 }

@@ -1,6 +1,9 @@
 package com.mate.carpool.domain.driver.aggregate;
 
+import com.mate.carpool.domain.driver.dto.DriverCreateDTO;
+import com.mate.carpool.domain.member.aggregate.Member;
 import com.mate.carpool.domain.member.aggregate.MemberId;
+import lombok.Builder;
 import lombok.Getter;
 
 import javax.persistence.*;
@@ -20,4 +23,16 @@ public class Driver {
 
     @Embedded
     private MemberId memberId;
+
+
+    protected Driver() {
+    }
+
+    @Builder
+    public Driver(String carNumber, String carImageUrl, String phoneNumber, MemberId memberId) {
+        this.id = new DriverId();
+        this.car = new Car(carNumber, carImageUrl);
+        this.phoneNumber = phoneNumber;
+        this.memberId = memberId;
+    }
 }
