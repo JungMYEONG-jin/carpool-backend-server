@@ -12,4 +12,12 @@ public class Boarding {
     private String place;
     @Column(name = "boarding_price")
     private Integer price;
+
+    public Boarding(String place, Integer price) {
+        this.place = place;
+        this.price = price;
+    }
+
+    public Boarding() {
+    }
 }

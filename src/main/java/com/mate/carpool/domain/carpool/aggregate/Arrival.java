@@ -10,4 +10,11 @@ import javax.persistence.Embeddable;
 public class Arrival {
     @Column(name = "end_area")
     private String area;
+
+    public Arrival(String area) {
+        this.area = area;
+    }
+
+    public Arrival() {
+    }
 }
