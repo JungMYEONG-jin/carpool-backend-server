@@ -49,6 +49,7 @@ public class Carpool extends BaseTimeEntity {
     public Carpool() {
     }
 
+    //*** constructor ***//
     @Builder
     protected Carpool(
             Integer recruitPerson,
@@ -69,5 +70,29 @@ public class Carpool extends BaseTimeEntity {
         this.status = status;
         this.creatorId = creatorId;
         this.boarding = new Boarding(boardingPlace, boardingPrice);
+    }
+
+    //*** domain logic ***//
+    public void updateBoarding(String place, Integer price){
+        this.boarding = new Boarding(place, price);
+    }
+
+    public void updateStatus(CarpoolStatus status){
+        this.status = status;
+    }
+
+    public void updateArrival(String area){
+        this.arrival = new Arrival(area);
+    }
+
+    public void updateDeparture(String area, LocalDateTime time){
+        this.departure = new Departure(area, time);
+    }
+
+    public void updateOpenChatUrl(String openChatUrl) {
+        this.openChatUrl = openChatUrl;
+    }
+    public void updateRecruitPerson(Integer recruitPerson){
+        this.recruitPerson = recruitPerson;
     }
 }
