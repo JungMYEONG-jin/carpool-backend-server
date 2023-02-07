@@ -81,7 +81,7 @@ public class CarpoolService {
 
         // 해당 카풀의 모든 탑승자의 상태를 CANCEL 로 변경
         List<Passenger> passengers = passengerRepository.findAllByCarpoolId(carpool.getId());
-        passengers.forEach(passenger -> passenger.updateStatus(PassengerStatus.CANCEL));
+        passengers.forEach(Passenger::cancel);
         carpool.delete();
     }
 

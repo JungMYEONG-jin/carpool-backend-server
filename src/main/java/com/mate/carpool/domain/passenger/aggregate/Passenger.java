@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Getter
 @Entity
@@ -42,5 +43,15 @@ public class Passenger extends BaseTimeEntity {
 
     public void updateStatus(PassengerStatus status) {
         this.status = status;
+    }
+
+    public void kicked() {
+        this.status = PassengerStatus.KICKED;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public void cancel() {
+        this.status = PassengerStatus.CANCEL;
+        this.deletedAt = LocalDateTime.now();
     }
 }
