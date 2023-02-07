@@ -20,6 +20,9 @@ import java.security.Principal;
 public class CarpoolController {
     private final CarpoolService carpoolService;
 
+    /**
+     * 카풀 생성
+     */
     @PostMapping("")
     public ResponseEntity<CommonResponse> create(
             Principal principal,
@@ -32,6 +35,9 @@ public class CarpoolController {
                 .body(CommonResponse.of(HttpStatus.CREATED, "카풀을 성공적으로 생성했습니다."));
     }
 
+    /**
+     * 카풀 수정
+     */
     @PutMapping("")
     public ResponseEntity<CommonResponse> update(
             @Validated @RequestBody CarpoolUpdateRequestDTO dto,
@@ -40,5 +46,18 @@ public class CarpoolController {
         String email = principal.getName();
         carpoolService.update(email, dto.toUpdateDTO());
         return ResponseEntity.ok(CommonResponse.of(HttpStatus.OK, "성공적으로 카풀 내용을 수정하였습니다."));
+    }
+
+    /**
+     * 카풀 삭제
+     */
+    @DeleteMapping("/{carpoolId}")
+    public ResponseEntity<CommonResponse> delete(
+            @PathVariable(name = "carpoolId")String carpoolId,
+            Principal principal
+    ){
+        String email = principal.getName();
+        carpoolService.delete(email, carpoolId);
+        return ResponseEntity.ok(CommonResponse.of(HttpStatus.OK, "성공적으로 카풀이 삭제가 되었습니다."));
     }
 }

@@ -3,6 +3,7 @@ package com.mate.carpool.domain.passenger.aggregate;
 import com.mate.carpool.domain.carpool.aggregate.CarpoolId;
 import com.mate.carpool.domain.member.aggregate.MemberId;
 import com.mate.carpool.domain.shared.BaseTimeEntity;
+import lombok.Builder;
 import lombok.Getter;
 
 import javax.persistence.*;
@@ -27,4 +28,19 @@ public class Passenger extends BaseTimeEntity {
     @Enumerated(value = EnumType.STRING)
     @Column(name = "status")
     private PassengerStatus status = PassengerStatus.COMMON;
+
+    protected Passenger() {
+    }
+
+    @Builder
+    public Passenger(MemberId memberId, CarpoolId carpoolId, PassengerStatus status) {
+        this.id = new PassengerId();
+        this.memberId = memberId;
+        this.carpoolId = carpoolId;
+        this.status = status;
+    }
+
+    public void updateStatus(PassengerStatus status) {
+        this.status = status;
+    }
 }

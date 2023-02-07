@@ -1,5 +1,8 @@
 package com.mate.carpool.domain.member.aggregate;
 
+import com.mate.carpool.domain.carpool.aggregate.CarpoolId;
+import com.mate.carpool.domain.passenger.aggregate.Passenger;
+import com.mate.carpool.domain.passenger.aggregate.PassengerStatus;
 import com.mate.carpool.domain.shared.BaseTimeEntity;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,5 +44,13 @@ public class Member extends BaseTimeEntity {
     // domain logic
     public void changeType(MemberType type){
         this.type = type;
+    }
+
+    public Passenger createPassenger(CarpoolId carpoolId) {
+        return Passenger.builder()
+                .status(PassengerStatus.COMMON)
+                .memberId(this.id)
+                .carpoolId(carpoolId)
+                .build();
     }
 }

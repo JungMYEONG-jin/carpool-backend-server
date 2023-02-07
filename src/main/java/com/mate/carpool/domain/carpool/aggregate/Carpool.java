@@ -95,4 +95,9 @@ public class Carpool extends BaseTimeEntity {
     public void updateRecruitPerson(Integer recruitPerson){
         this.recruitPerson = recruitPerson;
     }
+
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
+        this.status = CarpoolStatus.CANCEL;
+    }
 }
