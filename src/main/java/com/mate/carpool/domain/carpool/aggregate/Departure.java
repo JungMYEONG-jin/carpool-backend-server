@@ -14,4 +14,12 @@ public class Departure {
     private String area;
     @Column(name = "start_time")
     private LocalDateTime time;
+
+    public Departure(String area, LocalDateTime time) {
+        this.area = area;
+        this.time = time;
+    }
+
+    public Departure() {
+    }
 }

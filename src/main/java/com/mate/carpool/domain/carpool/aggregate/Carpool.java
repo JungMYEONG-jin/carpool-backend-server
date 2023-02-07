@@ -2,9 +2,11 @@ package com.mate.carpool.domain.carpool.aggregate;
 
 import com.mate.carpool.domain.member.aggregate.MemberId;
 import com.mate.carpool.domain.shared.BaseTimeEntity;
+import lombok.Builder;
 import lombok.Getter;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Getter
 @Entity
@@ -43,4 +45,29 @@ public class Carpool extends BaseTimeEntity {
     // 탑승 정보(장소와 가격)
     @Embedded
     private Boarding boarding;
+
+    public Carpool() {
+    }
+
+    @Builder
+    protected Carpool(
+            Integer recruitPerson,
+            String openChatUrl,
+            String arrivalArea,
+            LocalDateTime departureTime,
+            String departureArea,
+            CarpoolStatus status,
+            MemberId creatorId,
+            String boardingPlace,
+            Integer boardingPrice
+    ) {
+        this.id = new CarpoolId();
+        this.recruitPerson = recruitPerson;
+        this.openChatUrl = openChatUrl;
+        this.departure = new Departure(departureArea, departureTime);
+        this.arrival = new Arrival(arrivalArea);
+        this.status = status;
+        this.creatorId = creatorId;
+        this.boarding = new Boarding(boardingPlace, boardingPrice);
+    }
 }

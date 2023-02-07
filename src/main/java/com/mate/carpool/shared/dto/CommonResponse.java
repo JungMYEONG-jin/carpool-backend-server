@@ -10,7 +10,9 @@ public class CommonResponse {
     private HttpStatus status;
     private String message;
 
-
+    public static CommonResponse of(HttpStatus status, String message){
+        return new CommonResponse(status, message);
+    }
     public CommonResponse(HttpStatus status, String message) {
         this.status = status;
         this.message = message;
