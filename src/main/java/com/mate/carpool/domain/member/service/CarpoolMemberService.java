@@ -9,6 +9,7 @@ import com.mate.carpool.shared.exception.CustomHttpException;
 import com.mate.carpool.shared.security.provider.TokenProvider;
 import com.mate.carpool.web.auth.dto.TokenResponseDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class CarpoolMemberService implements MemberService {
 
+    @Value("${image.default.user}")
+    private String DEFAULT_USER_IMAGE_URL;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     //-------- for Security
@@ -41,7 +44,7 @@ public class CarpoolMemberService implements MemberService {
             throw new CustomHttpException(HttpStatus.CONFLICT, "이미 있는 이메일 정보입니다.");
         }
 
-        Member member = dto.toEntity(passwordEncoder);
+        Member member = dto.toEntity(passwordEncoder, DEFAULT_USER_IMAGE_URL);
         member.getId().generate();
         memberRepository.save(member);
     }
@@ -55,7 +58,7 @@ public class CarpoolMemberService implements MemberService {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword());
         Authentication authenticate = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         TokenDTO tokenDTO = tokenProvider.generateToken(authenticate);
-        redisTemplate.opsForValue().set(refreshTokenPrefix+authenticate.getName(), tokenDTO.getRefreshToken(), tokenDTO.getRefreshTokenExpiresIn(), TimeUnit.MILLISECONDS);
+        redisTemplate.opsForValue().set(refreshTokenPrefix + authenticate.getName(), tokenDTO.getRefreshToken(), tokenDTO.getRefreshTokenExpiresIn(), TimeUnit.MILLISECONDS);
         return tokenDTO.toResponse();
     }
 

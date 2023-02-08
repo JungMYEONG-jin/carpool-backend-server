@@ -36,7 +36,7 @@ public class PassengerService {
 
         Carpool carpool = carpoolRepository.findById(new CarpoolId(carpoolId))
                 .orElseThrow(() -> new CustomHttpException(HttpStatus.NOT_FOUND, "해당하는 카풀을 찾을 수 없습니다."));
-
+        carpool.ride();
         Passenger passenger = member.createPassenger(carpool.getId());
         passenger.getId().generate();
         passengerRepository.save(passenger);
@@ -51,15 +51,20 @@ public class PassengerService {
         Carpool carpool = carpoolRepository.findById(passenger.getCarpoolId())
                 .orElseThrow(()-> new CustomHttpException(HttpStatus.NOT_FOUND, "해당하는 카풀 정보를 찾을 수 없습니다."));
 
+        if(!passenger.getStatus().equals(PassengerStatus.COMMON))
+            throw new CustomHttpException(HttpStatus.CONFLICT, "이미 취소되었거나 퇴출된 패신저 입니다.");
+
         switch(member.getType()){
             case DRIVER:
                 // 자신이 생성한 카풀의 탑승자를 퇴출합니다.
                 if(!carpool.getCreatorId().equals(member.getId()))
                     throw new CustomHttpException(HttpStatus.FORBIDDEN, "해당 카풀에 대해서 퇴출 권한이 없습니다.");
+                carpool.quit();
                 passenger.kicked();
                 break;
             case PASSENGER:
                 // 자신을 현재 카풀에서 예약 취소합니다.
+                carpool.quit();
                 passenger.cancel();
                 break;
             default:

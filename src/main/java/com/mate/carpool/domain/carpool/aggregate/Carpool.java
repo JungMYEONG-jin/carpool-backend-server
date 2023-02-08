@@ -20,6 +20,10 @@ public class Carpool extends BaseTimeEntity {
     @Column(name = "recruit_person")
     private Integer recruitPerson;
 
+    // 모집 인원
+    @Column(name = "current_person")
+    private Integer currentPerson;
+
     // 카카오톡 오픈 채팅
     @Column(name = "open_chat_url")
     private String openChatUrl;
@@ -60,7 +64,8 @@ public class Carpool extends BaseTimeEntity {
             CarpoolStatus status,
             MemberId creatorId,
             String boardingPlace,
-            Integer boardingPrice
+            Integer boardingPrice,
+            Integer currentPerson
     ) {
         this.id = new CarpoolId();
         this.recruitPerson = recruitPerson;
@@ -70,34 +75,43 @@ public class Carpool extends BaseTimeEntity {
         this.status = status;
         this.creatorId = creatorId;
         this.boarding = new Boarding(boardingPlace, boardingPrice);
+        this.currentPerson = currentPerson == null ? 0 : currentPerson;
     }
 
     //*** domain logic ***//
-    public void updateBoarding(String place, Integer price){
+    public void updateBoarding(String place, Integer price) {
         this.boarding = new Boarding(place, price);
     }
 
-    public void updateStatus(CarpoolStatus status){
+    public void updateStatus(CarpoolStatus status) {
         this.status = status;
     }
 
-    public void updateArrival(String area){
+    public void updateArrival(String area) {
         this.arrival = new Arrival(area);
     }
 
-    public void updateDeparture(String area, LocalDateTime time){
+    public void updateDeparture(String area, LocalDateTime time) {
         this.departure = new Departure(area, time);
     }
 
     public void updateOpenChatUrl(String openChatUrl) {
         this.openChatUrl = openChatUrl;
     }
-    public void updateRecruitPerson(Integer recruitPerson){
+
+    public void updateRecruitPerson(Integer recruitPerson) {
         this.recruitPerson = recruitPerson;
     }
 
     public void delete() {
         this.deletedAt = LocalDateTime.now();
         this.status = CarpoolStatus.CANCEL;
+    }
+
+    public void ride() {
+        this.currentPerson += 1;
+    }
+    public void quit(){
+        this.currentPerson -= 1;
     }
 }

@@ -45,6 +45,7 @@ public class CarpoolCreateDTO {
                 .boardingPrice(boardingPrice)
                 .openChatUrl(openChatUrl)
                 .recruitPerson(recruitPerson)
+                .currentPerson(0)
                 .arrivalArea(arrivalArea)
                 .status(CarpoolStatus.BEFORE)
                 .build();

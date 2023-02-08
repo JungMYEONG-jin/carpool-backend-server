@@ -3,6 +3,7 @@ package com.mate.carpool.domain.carpool.service;
 import com.mate.carpool.domain.carpool.aggregate.Carpool;
 import com.mate.carpool.domain.carpool.aggregate.CarpoolId;
 import com.mate.carpool.domain.carpool.dto.CarpoolCreateDTO;
+import com.mate.carpool.domain.carpool.dto.CarpoolShortDTO;
 import com.mate.carpool.domain.carpool.dto.CarpoolUpdateDTO;
 import com.mate.carpool.domain.carpool.repository.CarpoolRepository;
 import com.mate.carpool.domain.member.aggregate.Member;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -85,4 +87,14 @@ public class CarpoolService {
         carpool.delete();
     }
 
+
+    @Transactional(readOnly = true)
+    public List<CarpoolShortDTO> getAvailableCarpoolList() {
+        return carpoolRepository.findAll().stream()
+                .map(carpool -> {
+                    Member member = memberRepository.findById(carpool.getCreatorId())
+                            .orElseThrow(() -> new CustomHttpException(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다."));
+                    return CarpoolShortDTO.from(carpool, member);
+                }).collect(Collectors.toList());
+    }
 }
