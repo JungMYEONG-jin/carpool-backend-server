@@ -114,4 +114,8 @@ public class Carpool extends BaseTimeEntity {
     public void quit(){
         this.currentPerson -= 1;
     }
+
+    public boolean isPossibleBoarding() {
+        return recruitPerson > currentPerson;
+    }
 }

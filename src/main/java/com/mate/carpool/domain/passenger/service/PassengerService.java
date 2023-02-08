@@ -36,6 +36,10 @@ public class PassengerService {
 
         Carpool carpool = carpoolRepository.findById(new CarpoolId(carpoolId))
                 .orElseThrow(() -> new CustomHttpException(HttpStatus.NOT_FOUND, "해당하는 카풀을 찾을 수 없습니다."));
+
+        if(!carpool.isPossibleBoarding())
+            throw new CustomHttpException(HttpStatus.FORBIDDEN, "만석입니다. 더이상 탑승할 수 없습니다.");
+
         carpool.ride();
         Passenger passenger = member.createPassenger(carpool.getId());
         passenger.getId().generate();
