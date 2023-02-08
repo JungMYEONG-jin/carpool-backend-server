@@ -35,6 +35,10 @@ public class CarpoolId implements Serializable {
         this.value = value;
     }
 
+    public static CarpoolId of(String value){
+        return new CarpoolId(value);
+    }
+
     public CarpoolId() {
     }
 }

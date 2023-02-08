@@ -3,15 +3,18 @@ package com.mate.carpool.domain.carpool.service;
 import com.mate.carpool.domain.carpool.aggregate.Carpool;
 import com.mate.carpool.domain.carpool.aggregate.CarpoolId;
 import com.mate.carpool.domain.carpool.dto.CarpoolCreateDTO;
+import com.mate.carpool.domain.carpool.dto.CarpoolDetailDTO;
 import com.mate.carpool.domain.carpool.dto.CarpoolShortDTO;
 import com.mate.carpool.domain.carpool.dto.CarpoolUpdateDTO;
 import com.mate.carpool.domain.carpool.repository.CarpoolRepository;
+import com.mate.carpool.domain.driver.aggregate.Driver;
+import com.mate.carpool.domain.driver.repository.DriverRepository;
 import com.mate.carpool.domain.member.aggregate.Member;
 import com.mate.carpool.domain.member.repository.MemberRepository;
 import com.mate.carpool.domain.passenger.aggregate.Passenger;
-import com.mate.carpool.domain.passenger.aggregate.PassengerStatus;
 import com.mate.carpool.domain.passenger.repository.PassengerRepository;
 import com.mate.carpool.shared.exception.CustomHttpException;
+import com.mate.carpool.domain.passenger.dto.PassengerDetailDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,6 +31,7 @@ public class CarpoolService {
     private final CarpoolRepository carpoolRepository;
     private final MemberRepository memberRepository;
     private final PassengerRepository passengerRepository;
+    private final DriverRepository driverRepository;
 
 
     @Transactional
@@ -96,5 +100,19 @@ public class CarpoolService {
                             .orElseThrow(() -> new CustomHttpException(HttpStatus.NOT_FOUND, "사용자 정보를 찾을 수 없습니다."));
                     return CarpoolShortDTO.from(carpool, member);
                 }).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public CarpoolDetailDTO getCarpoolDetail(String carpoolId) {
+        Carpool carpool = carpoolRepository.findById(CarpoolId.of(carpoolId))
+                .orElseThrow(() -> new CustomHttpException(HttpStatus.NOT_FOUND, "해당하는 카풀 정보를 찾을 수 없습니다."));
+        Member member = memberRepository.findById(carpool.getCreatorId())
+                .orElseThrow(() -> new CustomHttpException(HttpStatus.NOT_FOUND, "해당하는 사용자 정보를 찾을 수 없습니다."));
+        Driver driver = driverRepository.findByMemberId(member.getId())
+                .orElseThrow(() -> new CustomHttpException(HttpStatus.NOT_FOUND, "해당하는 드라이버 정보를 찾을 수 없습니다."));
+
+        log.info("카풀, 사용자, 드라이버 조회 완료");
+        List<PassengerDetailDTO> passengers = passengerRepository.getPassengerDetail(carpool.getId());
+        return CarpoolDetailDTO.create(carpool, member, driver, passengers);
     }
 }

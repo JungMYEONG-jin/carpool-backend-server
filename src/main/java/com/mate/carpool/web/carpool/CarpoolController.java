@@ -3,6 +3,7 @@ package com.mate.carpool.web.carpool;
 import com.mate.carpool.domain.carpool.service.CarpoolService;
 import com.mate.carpool.shared.dto.CommonResponse;
 import com.mate.carpool.web.carpool.dto.CarpoolCreateRequestDTO;
+import com.mate.carpool.web.carpool.dto.CarpoolDetailResponseDTO;
 import com.mate.carpool.web.carpool.dto.CarpoolShortResponseDTO;
 import com.mate.carpool.web.carpool.dto.CarpoolUpdateRequestDTO;
 import lombok.RequiredArgsConstructor;
@@ -73,6 +74,13 @@ public class CarpoolController {
         List<CarpoolShortResponseDTO> list = carpoolService.getAvailableCarpoolList().stream()
                 .map(CarpoolShortResponseDTO::from).collect(Collectors.toList());
         return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/{carpoolId}")
+    public ResponseEntity<CarpoolDetailResponseDTO> detail(
+            @PathVariable(name = "carpoolId") String carpoolId
+    ) {
+        return ResponseEntity.ok(CarpoolDetailResponseDTO.from(carpoolService.getCarpoolDetail(carpoolId)));
     }
 
 }
