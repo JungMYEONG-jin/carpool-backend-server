@@ -80,4 +80,39 @@ public class CarpoolMemberService implements MemberService {
                 .set(accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
         return id;
     }
+
+    /**
+     * 기본적으로 액세스 토큰을 재발급해준다.
+     * 리프레쉬 토큰도 유효시간이 5분 미만이면 재발급해준다.
+     * @param request
+     * @return
+     */
+    @Override
+    public TokenResponseDTO reissue(HttpServletRequest request) {
+        String refreshToken = Optional.ofNullable(tokenProvider.parseBearerToken(request)).orElseThrow(() -> new CustomHttpException(HttpStatus.UNAUTHORIZED, "토큰 정보가 존재하지 않습니다."));
+        if (!tokenProvider.validateToken(refreshToken)) {
+            throw new CustomHttpException(HttpStatus.UNAUTHORIZED, "토큰이 유효하지 않습니다.");
+        }
+        // authentication info
+        Authentication authentication = tokenProvider.getAuthenticationByRefreshToken(refreshToken);
+        // get token from cash
+        String cacheToken = (String) redisTemplate.opsForValue().get(refreshTokenPrefix + authentication.getName());
+        // compare
+        if (cacheToken == null || !refreshToken.equals(cacheToken)) {
+            throw new CustomHttpException(HttpStatus.UNAUTHORIZED, "토큰 정보가 일치하지 않습니다.");
+        }
+        // check expiration
+        long diffMinutes = tokenProvider.getExpiration(refreshToken) / 1000 / 60;
+        TokenDTO tokenDTO = null;
+        if (diffMinutes < 5 && diffMinutes >= 0) { // 0~5분 미만이면 refreshToken도 재발급
+            tokenDTO = tokenProvider.generateToken(authentication);
+            // cache update
+            redisTemplate.opsForValue().set(refreshTokenPrefix + authentication.getName(), tokenDTO.getRefreshToken(), tokenDTO.getRefreshTokenExpiresIn(), TimeUnit.MILLISECONDS);
+        } else if (diffMinutes < 0) {
+            throw new CustomHttpException(HttpStatus.UNAUTHORIZED, "토큰 유효기간이 만료되었습니다. 로그인 해주십시오.");
+        } else {
+            tokenDTO = tokenProvider.generateAccessToken(authentication, refreshToken);
+        }
+        return tokenDTO.toResponse();
+    }
 }

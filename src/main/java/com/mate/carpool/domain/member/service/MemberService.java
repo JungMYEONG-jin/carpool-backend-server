@@ -10,4 +10,5 @@ public interface MemberService {
     void create(MemberCreateDTO dto);
     TokenResponseDTO login(LoginDTO dto);
     String logout(HttpServletRequest request);
+    TokenResponseDTO reissue(HttpServletRequest request);
 }

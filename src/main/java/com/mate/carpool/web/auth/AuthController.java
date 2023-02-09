@@ -43,4 +43,10 @@ public class AuthController {
         memberService.logout(request);
         return ResponseEntity.ok(new CommonResponse(HttpStatus.OK, "성공적으로 로그아웃을 하였습니다."));
     }
+
+    @PostMapping("/reissue")
+    public ResponseEntity<TokenResponseDTO> reissue(HttpServletRequest request) {
+        TokenResponseDTO reissue = memberService.reissue(request);
+        return ResponseEntity.ok(reissue);
+    }
 }
