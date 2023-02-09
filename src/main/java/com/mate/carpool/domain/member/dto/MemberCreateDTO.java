@@ -12,13 +12,13 @@ public class MemberCreateDTO {
     private String password;
     private String username;
 
-    public Member toEntity(PasswordEncoder passwordEncoder) {
+    public Member toEntity(PasswordEncoder passwordEncoder, String profileImageUrl) {
         return Member.builder()
                 .email(email)
                 .password(passwordEncoder.encode(password))
                 .username(username)
                 .type(MemberType.PASSENGER)
-                .profileImageUrl(null)
+                .profileImageUrl(profileImageUrl)
                 .build();
     }
 

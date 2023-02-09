@@ -30,4 +30,15 @@ public class CarpoolId implements Serializable {
     public int hashCode() {
         return Objects.hash(value);
     }
+
+    public CarpoolId(String value) {
+        this.value = value;
+    }
+
+    public static CarpoolId of(String value){
+        return new CarpoolId(value);
+    }
+
+    public CarpoolId() {
+    }
 }
